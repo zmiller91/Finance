@@ -5,6 +5,7 @@ from Api import Api, ApiParameters
 from Common import Error, Logger
 from DB import TradingData, Connection
 import time
+import datetime
 
 class Runable:
     def __init__(self):
@@ -38,9 +39,7 @@ class Runable:
 
             Logger.logError("STARTED DATA RETREVIAL" )
             aTickers = Api.getQuandlTickers(strQuandl)
-            print aTickers
             oData = Api.getData(aTickers, self.aParams)
-            print oData
             if not oData:
                 Logger.logError('There was an error retrieving data.')
             else:
@@ -53,8 +52,20 @@ class Runable:
         TradingData.get(self.oDB, TradingData.S_DAILY_DATA, Api.getQuandlTickers(ApiParameters.QUANDL_SP500), '2015-11-20')
 
     def test(self):
-        bHaveDaily = False
+
+        bInsertDaily = True
+        start = datetime.now()
+        cur_date = datetime.datetime(start.year, start.month, start.day)
         while True:
-            if not bHaveDaily:
+
+            now = datetime.now()
+            now_time = now.time()
+            now_date = datetime.datetime(now.year, now.month, now.day)
+
+            if now_date > cur_date:
+                bInsertDaily = True
+                cur_date = now_date
+
+            if now_time >= time(12,00):
                 self.insertDailyData()
-                bHaveDaily = True
+                bInsertDaily = False
