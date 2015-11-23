@@ -2,7 +2,7 @@ __author__ = 'zmiller'
 
 from Conf import Conf
 from Common import Logger
-import MySQLdb
+import MySQLdb, MySQLdb.cursors
 from warnings import filterwarnings
 
 filterwarnings('ignore', category = MySQLdb.Warning)
@@ -24,7 +24,8 @@ def getDB():
         host = Conf.DB_HOST,
         user = Conf.DB_USER,
         passwd = Conf.DB_PASS,
-        db = Conf.DB)
+        db = Conf.DB,
+        cursorclass = MySQLdb.cursors.DictCursor)
     return oDB
 
 def execute(oDB, strQuery):
@@ -37,8 +38,9 @@ def execute(oDB, strQuery):
     """
 
     try:
-        oDB.cursor().execute(strQuery)
-        oDB.cursor().close()
+        oCursor =oDB.cursor()
+        oCursor.execute(strQuery)
+        return oCursor.fetchall()
     except MySQLdb.Error, e:
         oDB.rollback()
         if e.message:

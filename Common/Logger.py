@@ -1,7 +1,6 @@
 __author__ = 'zmiller'
 
 from Conf import Conf
-import datetime
 import time
 
 def log(strMessage):
@@ -11,4 +10,6 @@ def log(strMessage):
     with open(Conf.LOG_FILE, "a") as myfile:
         myfile.write(strMessage)
         myfile.close()
-    print strMessage
+
+    if(Conf.LOG_PRINT):
+        print strMessage

@@ -1,6 +1,6 @@
 __author__ = 'zmiller'
 
-from Parameters import Company, Stock
+from Dimensions import Company, Stock
 from Common import Logger
 import Connection
 import datetime
@@ -36,14 +36,18 @@ def createTable(oDB, strTable):
     ) != False
 
 
-def insert(oDB, strTableType, aRows):
+def insert(oDB, strTableTemplate, aRows):
     """
-    Inserts data into the tables of type strTableType. Will create tables if needed. Each row must contain a
-    Stock.DATE and Company.SYMBOL key.
+    Inserts data into the tables of type strTableTemplate. Will create tables if needed. Each row must contain a
+    Stock.DATE and Company.SYMBOL key. Each row represents a unique
+        INSERT IGNORE INTO strTableTemplate
+        (date, dim_name, value)
+        VALUES (aRows[Stock.DATE], aRows[Dimension], aRows[DimensionValue])
+
 
     :param oDB: MySQLdb object
-    :param strTableType: Type of table that will recieve inserts
-    :param aRows: An array of objects where the object keys are Parameters
+    :param strTableTemplate: Type of table that will recieve inserts
+    :param aRows: An array of objects where the object keys are Dimensions
     :return: boolean indicating the success of the inserts
     """
 
@@ -52,36 +56,29 @@ def insert(oDB, strTableType, aRows):
     while aRows:
         oRow = aRows.pop()
 
-        #each row must have a date and a ticker symbol
+        #each row must have a date and a ticker symbol, skip the row if it doesnt
         if not oRow[Stock.DATE] or oRow[Stock.DATE] == 'N/A' or not oRow[Company.SYMBOL] or oRow[Company.SYMBOL] == 'N/A':
             Logger.log('Each row provided to insertData must have a Stock.DATE and Stock.SYMBOL value. ')
-            return False
+            continue
 
-        date = oRow[Stock.DATE].replace('"', '');
-        strDate = "'" + datetime.datetime.strptime(date, '%m/%d/%Y').strftime('%Y-%m-%d') + "'"
+        strDate = datetime.datetime.strptime(oRow[Stock.DATE].replace('"', ''), '%m/%d/%Y').strftime('%Y-%m-%d')
         strSymbol = oRow[Company.SYMBOL]
-        strTable = strTableType.replace(TABLE_WILDCARD, strSymbol).replace('"', '')
+        strTable = strTableTemplate.replace(TABLE_WILDCARD, strSymbol).replace('"', '')
 
-        #create a table for this stock if it doesnt exist. Return false if there's a MySQL error
+        #create a table for this stock if it doesnt exist. Skip insert if there's a MySQL error
         if not createTable(oDB, strTable):
-            return False
+            bSuccess = False
+            continue
 
-        #create an insert statement for eah row and add it to aInsertStatements
+        #insert
         for oDim, mVal in oRow.iteritems():
 
-            #never insert the stocks date since its a column
-            if oDim == Stock.DATE:
+            #never insert the date dimension or any dimension with a 'N/A' value
+            if oDim == Stock.DATE or mVal == 'N/A':
                 continue
 
-            #if the value cannot be parsed as an int, then quote it
-            try:
-                float(mVal)
-            except ValueError:
-                mVal = "'" + mVal + "'"
-
             #construct and execute INSERT statement
-            oDim = '"' + oDim + '"'
-            strRow = '(' + ",".join([strDate, oDim, mVal]) + ')'
+            strRow = '(' + ",".join([quoteString(strDate), quoteString(oDim), quoteString(mVal)]) + ')'
             strInsert = """
                 INSERT IGNORE INTO {0}
                 {1}
@@ -95,3 +92,87 @@ def insert(oDB, strTableType, aRows):
                 bSuccess = False
 
     return bSuccess
+
+def get(oDB, strTableTemplate, aTickers, strDate):
+
+    aRetval = {}
+    for strTicker in aTickers:
+
+        #dont do the same work twice
+        if strTicker in aRetval:
+            continue
+
+        strTable = strTableTemplate.replace(TABLE_WILDCARD, strTicker)
+        strQuery = """
+            SELECT *
+            FROM {0}
+            WHERE date >= {1}
+            ORDER BY date DESC;
+        """.format(strTable, quoteString(strDate))
+
+        #go to next ticker if error selecting data
+        aData = Connection.execute(oDB, strQuery)
+        if not aData:
+            Logger.log("Error trying to select data")
+            continue
+
+        #add data to retval
+        aRetval[strTicker] = mapSelect(aData)
+
+    return aRetval
+
+def mapSelect(aData):
+    """
+    Takes the result set of a SELECT and maps it to be an array of objects where the keys are dimensions
+
+    :param aData: the result set of a SELECT
+    :return: an array of objects
+    """
+    aRetVal = []
+    oCurRow = {}
+    strCurDate = ""
+
+    #perform the map
+    for aRow in aData:
+
+        if not strCurDate:
+            strCurDate = aRow['date']
+
+        if aRow['date'] != strCurDate:
+            aRetVal.append(oCurRow)
+            oCurRow = {}
+            strCurDate = aRow['date']
+
+        oCurRow[Stock.DATE] = strCurDate
+        oCurRow[aRow['dim_name']] = aRow['value']
+
+    #clean up stragglers
+    if len(oCurRow) > 0:
+        aRetVal.append(oCurRow)
+
+    return aRetVal
+
+def quoteString(string):
+    """
+    Takes a string and encapsulates it in double quotes.  Will trim leading and trailing double quotes and escape any
+    interior double quotes.
+
+    :param string: the string to quote
+    :return: the encapsulated in double quotes
+    """
+
+    if(string):
+        if(len(string) > 1):
+
+            #trim leading double quotes
+            if string[0] == '"':
+                string = string[1:len(string)]
+
+            #trim trailing double quotes
+            if string[len(string) - 1] == '"':
+                string = string[0:len(string) - 1]
+
+        #escape all inner quotes
+        string.replace('"', '\"')
+        string = '"' + string + '"'
+    return string
