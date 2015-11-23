@@ -58,7 +58,7 @@ def insert(oDB, strTableTemplate, aRows):
 
         #each row must have a date and a ticker symbol, skip the row if it doesnt
         if not oRow[Stock.DATE] or oRow[Stock.DATE] == 'N/A' or not oRow[Company.SYMBOL] or oRow[Company.SYMBOL] == 'N/A':
-            Logger.log('Each row provided to insertData must have a Stock.DATE and Stock.SYMBOL value. ')
+            Logger.logError('Each row provided to insertData must have a Stock.DATE and Stock.SYMBOL value. ')
             continue
 
         strDate = datetime.datetime.strptime(oRow[Stock.DATE].replace('"', ''), '%m/%d/%Y').strftime('%Y-%m-%d')
@@ -88,7 +88,7 @@ def insert(oDB, strTableTemplate, aRows):
 
 
             if not Connection.insert(oDB, strInsert):
-                Logger.log("Failed to execute: " + strInsert)
+                Logger.logError("Failed to execute: " + strInsert)
                 bSuccess = False
 
     return bSuccess
@@ -113,7 +113,7 @@ def get(oDB, strTableTemplate, aTickers, strDate):
         #go to next ticker if error selecting data
         aData = Connection.execute(oDB, strQuery)
         if not aData:
-            Logger.log("Error trying to select data")
+            Logger.logError("Error trying to select data")
             continue
 
         #add data to retval

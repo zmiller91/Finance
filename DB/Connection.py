@@ -44,10 +44,10 @@ def execute(oDB, strQuery):
     except MySQLdb.Error, e:
         oDB.rollback()
         if e.message:
-            Logger.log(e.message)
+            Logger.logError(e.message)
         if len(e.args) > 1:
-            Logger.log(e.args[1])
-        Logger.log(strQuery)
+            Logger.logError(e.args[1])
+        Logger.logError(strQuery)
         return False
 
 def insert(oDB, strQuery):

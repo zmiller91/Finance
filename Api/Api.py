@@ -12,16 +12,15 @@ def get(strRequest):
     :param strRequest: the URL of the request
     :return: response if OK, False if not
     """
-
     try:
         return urllib2.urlopen(strRequest);
     except urllib2.HTTPError as e:
         strError = "The server couldn't fulfill the request. Error code: " + str(e.code)
-        Logger.log(strError)
+        Logger.logError(strError)
         return None
     except urllib2.URLError as e:
         strError = "We failed to reach the server. Reason: " + e.reason
-        Logger.log(strError)
+        Logger.logError(strError)
         return None
 
 def getQuandlTickers(strQuandl):
@@ -44,7 +43,6 @@ def parseQuandl(strResponse):
     :param strResponse: a response from quandl
     :return: array containing tickers
     """
-
     aTickers = []
     aRows = strResponse.split('\n')
 
@@ -61,7 +59,7 @@ def parseQuandl(strResponse):
         i += 1
 
     if iTickerCol == -1:
-        Logger.log('There were no tickers returned from quandl')
+        Logger.logError('There were no tickers returned from quandl')
 
     #loop through the remaining rows and collect all the tickers
     for strRow in aRows:
@@ -78,7 +76,6 @@ def getData(aTickers, aParams):
     :param aParams: the columns to be returned
     :return: array of objects where each object represents a row in the CSV
     """
-
     oQuery = {
         ApiParameters.YAHOO_TICKERS: ApiParameters.YAHOO_TICKER_SEPARATOR.join(aTickers),
         ApiParameters.YAHOO_PARAMS: ApiParameters.YAHOO_PARAM_SEPARATOR.join(aParams)
@@ -104,7 +101,6 @@ def parseYahoo(strResponse, aColMap):
     :param aColMap: array of columns that maps the returned value from get()
     :return: Array of objects representing the CSV returned from get()
     """
-
     aResponse = []
     for aRow in strResponse.split('\n'):
         if not aRow:
