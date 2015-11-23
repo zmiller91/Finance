@@ -54,11 +54,11 @@ class Runable:
     def test(self):
 
         bInsertDaily = True
-        start = datetime.now()
+        start = datetime.datetime.now()
         cur_date = datetime.datetime(start.year, start.month, start.day)
         while True:
 
-            now = datetime.now()
+            now = datetime.datetime.now()
             now_time = now.time()
             now_date = datetime.datetime(now.year, now.month, now.day)
 
@@ -66,6 +66,9 @@ class Runable:
                 bInsertDaily = True
                 cur_date = now_date
 
-            if now_time >= time(12,00):
+            if now.hour == 12:
                 self.insertDailyData()
                 bInsertDaily = False
+
+Run = Runable()
+Run.test()
