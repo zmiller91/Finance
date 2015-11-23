@@ -70,5 +70,3 @@ class Runable:
                 self.insertDailyData()
                 bInsertDaily = False
 
-Run = Runable()
-Run.test()

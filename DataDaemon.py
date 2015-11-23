@@ -13,6 +13,7 @@ class DataDaemon(Daemon):
 #daemon.start()
 
 if __name__ == "__main__":
+    print 'init'
     daemon = DataDaemon('/tmp/daemon-example.pid')
     if len(sys.argv) == 2:
         if 'start' == sys.argv[1]:
