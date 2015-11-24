@@ -1,3 +1,4 @@
 .idea/
+logApp.txt
 logError.txt
 *.pyc

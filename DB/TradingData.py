@@ -1,6 +1,6 @@
 __author__ = 'zmiller'
 
-from Dimensions import Company, Stock
+from Dimensions import Company, Stock, RealTime
 from Common import Logger
 import Connection
 import datetime
@@ -55,13 +55,26 @@ def insert(oDB, strTableTemplate, aRows):
     strColumns = '(' + ",".join(['date', 'dim_name', 'value']) + ')'
     while aRows:
         oRow = aRows.pop()
+        strDateDim = ''
+        strDateDimVal = ''
 
-        #each row must have a date and a ticker symbol, skip the row if it doesnt
-        if not oRow[Stock.DATE] or oRow[Stock.DATE] == 'N/A' or not oRow[Company.SYMBOL] or oRow[Company.SYMBOL] == 'N/A':
-            Logger.logError('Each row provided to insertData must have a Stock.DATE and Stock.SYMBOL value. ')
+        if Stock.DATE in oRow and oRow[Stock.DATE] != 'N/A':
+            strDateDim = Stock.DATE
+            strDateDimVal = oRow[Stock.DATE]
+
+        elif RealTime.RT_LAST_TRADE in oRow and oRow[RealTime.RT_LAST_TRADE] != 'N/A':
+            strDateDim = RealTime.RT_LAST_TRADE
+            strDateDimVal = oRow[RealTime.RT_LAST_TRADE]
+
+        else:
+            Logger.logError('Each row provided to insertData must have a Stock.DATE and it must not be null')
             continue
 
-        strDate = datetime.datetime.strptime(oRow[Stock.DATE].replace('"', ''), '%m/%d/%Y').strftime('%Y-%m-%d')
+        if not Company.SYMBOL in oRow and oRow[Company.SYMBOL] != 'N/A':
+            Logger.logError('Each row provided to insertData must have a Stock.SYMBOL and it must not be null.')
+            continue
+
+        strDate = datetime.datetime.strptime(strDateDimVal.replace('"', ''), '%m/%d/%Y').strftime('%Y-%m-%d')
         strSymbol = oRow[Company.SYMBOL]
         strTable = strTableTemplate.replace(TABLE_WILDCARD, strSymbol).replace('"', '')
 
@@ -74,7 +87,7 @@ def insert(oDB, strTableTemplate, aRows):
         for oDim, mVal in oRow.iteritems():
 
             #never insert the date dimension or any dimension with a 'N/A' value
-            if oDim == Stock.DATE or mVal == 'N/A':
+            if oDim == strDateDim or mVal == 'N/A':
                 continue
 
             #construct and execute INSERT statement

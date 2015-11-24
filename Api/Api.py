@@ -71,24 +71,23 @@ def parseQuandl(strResponse):
 def getData(aTickers, aParams):
     """
     Performs a GET on yahoo finance to retrieve ticker data.
-
     :param aTickers: list of tickers to retrieve data
     :param aParams: the columns to be returned
     :return: array of objects where each object represents a row in the CSV
     """
+
     oQuery = {
         ApiParameters.YAHOO_TICKERS: ApiParameters.YAHOO_TICKER_SEPARATOR.join(aTickers),
         ApiParameters.YAHOO_PARAMS: ApiParameters.YAHOO_PARAM_SEPARATOR.join(aParams)
     }
     strQuery = urllib.urlencode(oQuery)
     strRequest = ApiParameters.YAHOO_BASE_URL + '?' + strQuery
-    oRetVal = get(strRequest)
+    oResponse = get(strRequest)
 
-    if not oRetVal:
+    if not oResponse:
         return False
 
-    return parseYahoo(oRetVal.read(), aParams)
-
+    return parseYahoo(oResponse.read(), aParams)
 
 def parseYahoo(strResponse, aColMap):
     """

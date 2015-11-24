@@ -7,7 +7,7 @@ from Run import Runable
 class DataDaemon(Daemon):
     def run(self):
         Run = Runable()
-        Run.test()
+        Run.run()
 
 #daemon = DataDaemon('log.pid')
 #daemon.start()

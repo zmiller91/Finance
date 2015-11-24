@@ -3,7 +3,7 @@ __author__ = 'zmiller'
 from Conf import Conf
 import time
 
-def log(strFile, strMessage):
+def log(strFile, strMessage, bPrint):
     strDate = time.strftime("%x")
     strTime = time.strftime("%X")
     strMessage = strDate + " " + strTime + "\t" + strMessage + "\n"
@@ -11,12 +11,12 @@ def log(strFile, strMessage):
         myfile.write(strMessage)
         myfile.close()
 
-    if(Conf.LOG_PRINT):
+    if(bPrint):
         print strMessage
 
 
 def logError(strMessage):
-    log(Conf.LOG_ERROR, strMessage)
+    log(Conf.LOG_ERROR, strMessage, Conf.LOG_ERR_PRINT)
 
 def logApp(strMessage):
-    log(Conf.LOG_APP, strMessage)
+    log(Conf.LOG_APP, strMessage, Conf.LOG_APP_PRINT)

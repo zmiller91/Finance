@@ -1,72 +1,147 @@
 __author__ = 'zmiller'
 
+import AppVars
 from Dimensions import Company, Stock, IncomeStatement, BalanceSheet
 from Api import Api, ApiParameters
-from Common import Error, Logger
+from Common import Error, Logger, Utils
+from Conf import Conf
 from DB import TradingData, Connection
-import time
+from pytz import timezone
 import datetime
 
 class Runable:
+
     def __init__(self):
-        #dimensions to retrieve
-        self.aParams = [Stock.DATE,
-                   Company.SYMBOL,
-                   Company.STOCK_EXCHANGE,
-                   Stock.PRICE,
-                   Stock.OPEN,
-                   Stock.CLOSE,
-                   Stock.VOLUME,
-                   Stock.EPS,
-                   Stock.HIGH_52WK,
-                   Stock.LOW_52WK,
-                   Stock.MA_200_DAY,
-                   Stock.MA_50_DAY,
-                   Stock.RATIO_SHORT,
-                   Stock.HIGH,
-                   Stock.LOW,
-                   IncomeStatement.EBITDA,
-                   IncomeStatement.PE_RATIO,
-                   IncomeStatement.PRICE_TO_BOOK,
-                   IncomeStatement.PRICE_TO_SALES]
+        """
+        Construct
+        :return: None
+        """
         self.oDB = Connection.getDB()
 
+    def getQuandlTickers(self, aQuandlUrls):
+        """
+        get a unique set of tickers by adding everything in "aSet not in aTickers" to aTickers
+        link: http://stackoverflow.com/questions/7961363/python-removing-duplicates-in-lists
+        :param aQuandlUrls: Quandl URLs
+        :return: a list of unique tickers from the provided quandl urls
+        """
+
+        aTickers = []
+        for strQuandl in aQuandlUrls:
+            aSet = Api.getQuandlTickers(strQuandl)
+            aTickers += list(set(aSet) - set(aTickers))
+            del aSet
+
+        return aTickers
+
     def insertDailyData(self):
-        aQuandlTickers = [ApiParameters.QUANDL_DJIA, ApiParameters.QUANDL_FTSE100, ApiParameters.QUANDL_NASDAQ,
-                          ApiParameters.QUANDL_NASDAQ100, ApiParameters.QUANDL_NYSE, ApiParameters.QUANDL_SP500]
+        """
+        Routine for collecting and inserting daily data from the YahooApi. All data is for the previously closed
+        trading day.
+        :return: None
+        """
 
-        for strQuandl in aQuandlTickers:
+        Logger.logApp("Collecting and inserting daily data...")
 
-            Logger.logError("STARTED DATA RETREVIAL" )
-            aTickers = Api.getQuandlTickers(strQuandl)
-            oData = Api.getData(aTickers, self.aParams)
-            if not oData:
-                Logger.logError('There was an error retrieving data.')
-            else:
+        # chunk the tickers into a managable size, retrieve data for each chunk, and then insert each chunk
+        # chunking allows us to insert periodicly through the data collection process and ensures our YahooApi request
+        # doesnt return a 414 response code (URI too long)
+        iCurChunk = 0
+        aTickers = self.getQuandlTickers(AppVars.DATA_DAILY_TICKERS)
+        aTickerChunks = Utils.chunk(aTickers, AppVars.CHUNK_TICKERS)
+        for iCurChunk in range(0, len(aTickerChunks)):
+            oData = Api.getData(aTickerChunks[iCurChunk], AppVars.DATA_DAILY_DIMENSIONS)
+            if  oData:
                 TradingData.insert(self.oDB, TradingData.S_DAILY_DATA, oData)
                 self.oDB.commit()
-            Logger.logError("Finished DATA RETREVIAL")
+                Logger.logApp("Inserting data for chunk " + str(iCurChunk + 1) + " of " + str(len(aTickerChunks)))
+            else:
+                Logger.logError('There was an error retrieving data for chunk ' +  str(iCurChunk + 1))
+            del oData
 
-    def getRTData(self):
-        # retrieve daily data for all our tickers
+    def selectDailyData(self):
+        """
+        Retrieve daily data for all our tickers
+        :return:
+        """
         TradingData.get(self.oDB, TradingData.S_DAILY_DATA, Api.getQuandlTickers(ApiParameters.QUANDL_SP500), '2015-11-20')
 
-    def test(self):
+    def run(self):
+        """
+        Main daemon process invoked by DataDaemon. This method is a infinite loop that has logic in it's body to
+        execute commands at specific times of day.  More specifically, this process is responsible for creating,
+        running, and closing each trading day. This process will get killed when the daemon stops.
+        :return:
+        """
 
-        bInsertDaily = True
-        start = datetime.datetime.now()
-        cur_date = datetime.datetime(start.year, start.month, start.day)
+        # service variables
+        bStartTrading = True
+        bStopTrading = False
+
         while True:
 
-            now = datetime.datetime.now()
-            now_time = now.time()
-            now_date = datetime.datetime(now.year, now.month, now.day)
+            # Get the current EST time and date
+            oNow = datetime.datetime.now(timezone(Conf.PYTZ_TIMEZONE))
+            oNowDate = datetime.datetime(oNow.year, oNow.month, oNow.day)
 
-            if now_date > cur_date:
-                bInsertDaily = True
-                cur_date = now_date
+            # Market is only open on weedays from 9:30AM EST to 4:00PM EST
+            bIsWeekDay = not(oNow.strftime('%A') == 'sunday' or oNow.strftime('%A') == 'saturday')
+            bIsMarketHour = oNow.hour >= 9 and oNow.minute >= 30 and oNow.hour <= 16 and oNow.minute <= 0
+            bIsOpen = bIsWeekDay and bIsMarketHour
 
-            if now.hour == 12:
-                self.insertDailyData()
-                bInsertDaily = False
+            # open market vars, must be deleted at EOD
+            aTickerChunks = []
+
+            # it's 5AM EST on a week day let's collect the previous days data and get everything set up
+            if True: #bIsWeekDay and bStartTrading and oNow.hour == 5:
+
+                # insert daily data from yesterday
+                bStartTrading = False
+                #self.insertDailyData()
+
+                # get a list of tickers and transform them into chunks
+                aTickers = self.getQuandlTickers(AppVars.DATA_RT_TICKERS)
+                aTickerChunks = Utils.chunk(aTickers, AppVars.CHUNK_TICKERS)
+                del aTickers
+
+                # OK to stop trading
+                bStartTrading = False
+                bStopTrading = True
+
+            # the market is open! start collecting data and trading
+            if True: #bIsOpen:
+
+                # get current pricing data for all tickers and create a data map where keys are tickers and values are
+                # the location of the ticker's value in the data list
+                aDataList = []
+                oDataMap = {}
+                for iCurChunk in range(0, len(aTickerChunks)):
+                    aChunkData = Api.getData(aTickerChunks[iCurChunk], AppVars.DATA_RT_DIMENSIONS)
+                    for iDataIndex in range(len(aDataList), len(aDataList) + len(aChunkData)):
+                        oDataMap[aChunkData[iDataIndex - len(aDataList)][Company.SYMBOL]] = iDataIndex
+                    aDataList += aChunkData
+                    del aChunkData
+                del iCurChunk
+                del iDataIndex
+
+                # broadcast new data to all portfolios
+
+                # insert new data
+                if aDataList:
+                    TradingData.insert(self.oDB, TradingData.S_RT_DATA, aDataList)
+                    self.oDB.commit()
+                    Logger.logApp("Inserting data for chunk " + str(iCurChunk + 1) + " of " + str(len(aTickerChunks)))
+                else:
+                    Logger.logError('There was an error retrieving data for chunk ' +  str(iCurChunk + 1))
+                del oDataMap
+
+            # it's after 4:30PM EST on a week day let's close the trading day and go to sleep
+            if bIsWeekDay and bStopTrading and oNow.hour >= 16 and oNow.minute > 30:
+
+                # clean up market vars
+                del aTickerChunks
+
+                # OK to start trading
+                bStopTrading = False
+                bStartTrading = True
 
