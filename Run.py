@@ -93,7 +93,7 @@ class Runable:
             aTickerChunks = []
 
             # it's 5AM EST on a week day let's collect the previous days data and get everything set up
-            if True: #bIsWeekDay and bStartTrading and oNow.hour == 5:
+            if bIsWeekDay and bStartTrading and oNow.hour == 5:
 
                 # insert daily data from yesterday
                 bStartTrading = False
@@ -109,7 +109,9 @@ class Runable:
                 bStopTrading = True
 
             # the market is open! start collecting data and trading
-            if True: #bIsOpen:
+            if bIsOpen:
+
+                Logger.logApp("Starting a trading cycle...")
 
                 # get current pricing data for all tickers and create a data map where keys are tickers and values are
                 # the location of the ticker's value in the data list
@@ -134,6 +136,8 @@ class Runable:
                 else:
                     Logger.logError('There was an error retrieving data for chunk ' +  str(iCurChunk + 1))
                 del oDataMap
+
+                Logger.logApp("Finished a trading cycle")
 
             # it's after 4:30PM EST on a week day let's close the trading day and go to sleep
             if bIsWeekDay and bStopTrading and oNow.hour >= 16 and oNow.minute > 30:
