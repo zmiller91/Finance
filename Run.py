@@ -89,17 +89,14 @@ class Runable:
             bIsMarketHour = oNow.hour >= 9 and oNow.minute >= 30 and oNow.hour <= 16 and oNow.minute <= 0
             bIsOpen = bIsWeekDay and bIsMarketHour
 
-            # open market vars, must be deleted at EOD
-            aTickerChunks = []
-
             # it's 5AM EST on a week day let's collect the previous days data and get everything set up
             if bIsWeekDay and bStartTrading and oNow.hour == 5:
 
                 # insert daily data from yesterday
                 bStartTrading = False
-                #self.insertDailyData()
+                self.insertDailyData()
 
-                # get a list of tickers and transform them into chunks
+                # market vars, must be deleted at EOD
                 aTickers = self.getQuandlTickers(AppVars.DATA_RT_TICKERS)
                 aTickerChunks = Utils.chunk(aTickers, AppVars.CHUNK_TICKERS)
                 del aTickers
@@ -109,7 +106,7 @@ class Runable:
                 bStopTrading = True
 
             # the market is open! start collecting data and trading
-            if bIsOpen:
+            if bIsOpen and aTickerChunks:
 
                 Logger.logApp("Starting a trading cycle...")
 
@@ -123,6 +120,7 @@ class Runable:
                         oDataMap[aChunkData[iDataIndex - len(aDataList)][Company.SYMBOL]] = iDataIndex
                     aDataList += aChunkData
                     del aChunkData
+
                 del iCurChunk
                 del iDataIndex
 
@@ -132,9 +130,8 @@ class Runable:
                 if aDataList:
                     TradingData.insert(self.oDB, TradingData.S_RT_DATA, aDataList)
                     self.oDB.commit()
-                    Logger.logApp("Inserting data for chunk " + str(iCurChunk + 1) + " of " + str(len(aTickerChunks)))
                 else:
-                    Logger.logError('There was an error retrieving data for chunk ' +  str(iCurChunk + 1))
+                    Logger.logError('There was an error inserting real time data')
                 del oDataMap
 
                 Logger.logApp("Finished a trading cycle")
