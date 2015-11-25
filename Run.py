@@ -84,16 +84,15 @@ class Runable:
             oNow = datetime.datetime.now(timezone(Conf.PYTZ_TIMEZONE))
             oNowDate = datetime.datetime(oNow.year, oNow.month, oNow.day)
 
-            # Market is only open on weedays from 9:30AM EST to 4:00PM EST
+            # Market is only open on week days from 9:30AM EST to 4:00PM EST
             bIsWeekDay = not(oNow.strftime('%A') == 'sunday' or oNow.strftime('%A') == 'saturday')
-            bIsMarketHour = oNow.hour >= 9 and oNow.minute >= 30 and oNow.hour <= 16 and oNow.minute <= 0
-            bIsOpen = bIsWeekDay and bIsMarketHour
+            bIsMarketHours = datetime.time(20, 0) <= datetime.time(oNow.hour, oNow.minute) and datetime.time(oNow.hour, oNow.minute) < datetime.time(20, 30)
+            bIsOpen = bIsWeekDay and bIsMarketHours
 
             # it's 5AM EST on a week day let's collect the previous days data and get everything set up
             if bIsWeekDay and bStartTrading and oNow.hour == 5:
 
                 # insert daily data from yesterday
-                bStartTrading = False
                 self.insertDailyData()
 
                 # market vars, must be deleted at EOD
