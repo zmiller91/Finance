@@ -2,10 +2,12 @@ __author__ = 'zmiller'
 
 LOG_ERROR = '/tmp/logError.txt'
 LOG_APP = '/tmp/logApp.txt'
-# LOG_ERROR = 'logError.txt'
-# LOG_APP = 'logApp.txt'
-LOG_APP_PRINT = True
+LOG_APP_PRINT = False
 LOG_ERR_PRINT = False
+# LOG_ERROR = 'C:\Users\zmiller\web\YahooFinanceApi\\var\logError.txt'
+# LOG_APP = 'C:\Users\zmiller\web\YahooFinanceApi\\var\logApp.txt'
+# LOG_APP_PRINT = True
+# LOG_ERR_PRINT = True
 
 DB_HOST = 'localhost'
 DB = 'TradingApi'

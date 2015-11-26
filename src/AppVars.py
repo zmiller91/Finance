@@ -6,8 +6,9 @@ This file has the ability to use the entire application to create custom applica
 any part of the application and exist as a central repository that's easy to view and update.
 
 """
-from Dimensions import Company, Stock, IncomeStatement, RealTime
-from Api import ApiParameters
+from src.Dimensions import Company, IncomeStatement, RealTime
+from src.Dimensions import Stock
+from src.Api import ApiParameters
 
 """
 This variable defines the dimensions to use when making a GET request to the YahooApi for daily data.

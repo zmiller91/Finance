@@ -1,7 +1,9 @@
 __author__ = 'zmiller'
 
-from Conf import Conf
 import time
+
+from src.Conf import Conf
+
 
 def log(strFile, strMessage, bPrint):
     strDate = time.strftime("%x")

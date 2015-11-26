@@ -1,8 +1,9 @@
 __author__ = 'zmiller'
-import sys, time
+import sys
+
 from Daemon import Daemon
-from Common import Logger
 from Run import Runable
+
 
 class DataDaemon(Daemon):
     def run(self):

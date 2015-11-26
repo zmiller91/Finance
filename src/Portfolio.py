@@ -1,6 +1,6 @@
 __author__ = 'zmiller'
 
-from DB import Connection
+from src.DB import Connection
 
 class Portfolio:
 

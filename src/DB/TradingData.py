@@ -1,9 +1,11 @@
 __author__ = 'zmiller'
 
-from Dimensions import Company, Stock, RealTime
+import datetime
+
+from Dimensions import Company, RealTime
+from src.Dimensions import Stock
 from Common import Logger
 import Connection
-import datetime
 
 TABLE_WILDCARD = ':x:'
 S_DAILY_DATA = 's_' + TABLE_WILDCARD + '_daily_data'
@@ -67,11 +69,9 @@ def insert(oDB, strTableTemplate, aRows):
             strDateDimVal = oRow[RealTime.RT_LAST_TRADE]
 
         else:
-            Logger.logError('Each row provided to insertData must have a Stock.DATE and it must not be null')
             continue
 
         if not Company.SYMBOL in oRow and oRow[Company.SYMBOL] != 'N/A':
-            Logger.logError('Each row provided to insertData must have a Stock.SYMBOL and it must not be null.')
             continue
 
         strDate = datetime.datetime.strptime(strDateDimVal.replace('"', ''), '%m/%d/%Y').strftime('%Y-%m-%d')

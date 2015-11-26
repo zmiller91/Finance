@@ -1,7 +1,10 @@
 __author__ = 'zmiller'
 
-import imp, os
-from Common import Logger
+import imp
+import os
+
+from src.Common import Logger
+
 
 class PortfolioCollection:
     def __init__(self):
@@ -33,7 +36,8 @@ class PortfolioCollection:
                         del path, info, strAlgorithmClass, oModule
 
                     except Exception as e:
-                        Logger.logError("Failed to instantiate {0}: {1}\n".format(str(file), str(e)))
+                        Logger.logError("Failed to instantiate {0}: {1}".format(str(file), str(e)))
+                        Logger.logError("Failed to instantiate {0}: {1}".format(str(file), str(e)))
 
     def getCollection(self):
         """

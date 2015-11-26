@@ -2,9 +2,12 @@ __author__ = "http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_i
 
 #!/usr/bin/env python
 
-import sys, os, time, atexit
+import sys
+import os
+import time
+import atexit
 from signal import SIGTERM
-from Common import Logger
+
 
 class Daemon:
     """
