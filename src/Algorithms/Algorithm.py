@@ -23,7 +23,7 @@ class Algorithm(Portfolio):
         ]
 
         # This information is required. It defines how we configure a trading environment.  Please do not remove
-        # any of these fields.  Adding fields will do nothing.
+        # any of these fields.  Adding fields will be accessible through self.oAlgoConf.
         oAlgorithmConf = {
             "name": "Algorithm Name",
             "start_bal": 0.0,

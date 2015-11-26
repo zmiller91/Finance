@@ -25,7 +25,7 @@ class Portfolio:
 
         self.oNewValues = {}
 
-    def updateTradeLog(self, strTicker, strType, iShares, fTradeValue, fTradeCost):
+    def log(self, strTicker, strType, iShares, fTradeValue, fTradeCost):
         """
         Insert an entry into the trade log
         :param strTicker: stock's ticker
@@ -94,7 +94,7 @@ class Portfolio:
             self.oOpenPositions[strTicker]["cost_basis"] += fTradeValue
 
             # update trade log
-            self.updateTradeLog(strTicker, "BUY", iShares, fTradeValue, fTradeCost)
+            self.log(strTicker, "BUY", iShares, fTradeValue, fTradeCost)
 
         del fCurAsk, iShares, fTradeValue, fTradeCost
         return True
@@ -143,7 +143,7 @@ class Portfolio:
                 del self.oOpenPositions[strTicker]
 
             # update trade log
-            self.updateTradeLog(strTicker, "SELL", iShares, fTradeValue, self.fTradeComission)
+            self.log(strTicker, "SELL", iShares, fTradeValue, self.fTradeComission)
             del fCurAsk, iShares, fTradeValue, fPctSellOff, fCostBasisReduction
 
         return True

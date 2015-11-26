@@ -37,7 +37,6 @@ class PortfolioCollection:
 
                     except Exception as e:
                         Logger.logError("Failed to instantiate {0}: {1}".format(str(file), str(e)))
-                        Logger.logError("Failed to instantiate {0}: {1}".format(str(file), str(e)))
 
     def getCollection(self):
         """
