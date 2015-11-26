@@ -82,12 +82,13 @@ class Runable:
         while True:
 
             # Get the current EST time and date
-            oNow = datetime.datetime.now(timezone(Conf.PYTZ_TIMEZONE))
+            oNow = datetime.datetime.now(timezone(Conf.MARKET_TIMEZONE))
             oNowDate = datetime.datetime(oNow.year, oNow.month, oNow.day)
 
             # Market is only open on week days from 9:30AM EST to 4:00PM EST
             bIsWeekDay = not(oNow.strftime('%A') == 'sunday' or oNow.strftime('%A') == 'saturday')
-            bIsMarketHours = datetime.time(20, 0) <= datetime.time(oNow.hour, oNow.minute) and datetime.time(oNow.hour, oNow.minute) < datetime.time(20, 30)
+            bIsMarketHours = datetime.time(Conf.MARKET_OPEN_HOUR, Conf.MARKET_OPEN_MINUTE) <= datetime.time(oNow.hour, oNow.minute) \
+                             and datetime.time(oNow.hour, oNow.minute) < datetime.time(Conf.MARKET_CLOSE_HOUR, Conf.MARKET_CLOSE_MINUTE)
             bIsOpen = bIsWeekDay and bIsMarketHours
 
             # it's 5AM EST on a week day let's collect the previous days data and get everything set up
@@ -146,4 +147,4 @@ class Runable:
                 bStopTrading = False
                 bStartTrading = True
 
-            time.sleep(60)
+            time.sleep(Conf.DAEMON_SLEEP)

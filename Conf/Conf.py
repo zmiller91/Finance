@@ -1,15 +1,24 @@
 __author__ = 'zmiller'
 
-LOG_ERROR = 'logError.txt'
-LOG_APP = 'logApp.txt'
-# LOG_ERROR = '/tmp/logError.txt'
-# LOG_APP = '/tmp/logApp.txt'
+LOG_ERROR = '/tmp/logError.txt'
+LOG_APP = '/tmp/logApp.txt'
+# LOG_ERROR = 'logError.txt'
+# LOG_APP = 'logApp.txt'
 LOG_APP_PRINT = True
 LOG_ERR_PRINT = False
 
 DB_HOST = 'localhost'
 DB = 'TradingApi'
-DB_USER = 'ima_user'
-DB_PASS = 'fotbaltym9'
+DB_USER = 'root'
+DB_PASS = '!9fotbaltym9!'
+# DB_USER = 'ima_user'
+# DB_PASS = 'fotbaltym9'
 
-PYTZ_TIMEZONE = 'US/Eastern'
+
+MARKET_TIMEZONE = 'US/Eastern'
+MARKET_OPEN_HOUR = 9
+MARKET_OPEN_MINUTE = 30
+MARKET_CLOSE_HOUR = 16
+MARKET_CLOSE_MINUTE = 0
+
+DAEMON_SLEEP = 60
