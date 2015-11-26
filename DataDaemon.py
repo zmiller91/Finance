@@ -9,17 +9,13 @@ class DataDaemon(Daemon):
         Run = Runable()
         Run.run()
 
-#daemon = DataDaemon('log.pid')
-#daemon.start()
-
 if __name__ == "__main__":
-    print 'init'
     daemon = DataDaemon('/tmp/daemon-example.pid')
     if len(sys.argv) == 2:
         if 'start' == sys.argv[1]:
             print "Starting DataDaemon..."
             daemon.start()
-            Logger.logApp("DataDaemon Started")
+            print "DataDaemon Started"
         elif 'stop' == sys.argv[1]:
             print "Stopping DataDaemon..."
             daemon.stop()
