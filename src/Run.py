@@ -10,7 +10,7 @@ from PortfolioCollection import PortfolioCollection
 from Dimensions import Company
 from Api import Api, ApiParameters
 from Common import Logger, Utils
-from src.Conf import Conf
+from Conf import Conf
 from DB import TradingData, Connection
 
 

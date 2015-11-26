@@ -2,7 +2,7 @@ __author__ = 'zmiller'
 
 import time
 
-from src.Conf import Conf
+from Conf import Conf
 
 
 def log(strFile, strMessage, bPrint):

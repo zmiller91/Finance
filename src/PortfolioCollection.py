@@ -3,7 +3,7 @@ __author__ = 'zmiller'
 import imp
 import os
 
-from src.Common import Logger
+from Common import Logger
 
 
 class PortfolioCollection:

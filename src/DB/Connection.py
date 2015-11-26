@@ -5,7 +5,7 @@ from warnings import filterwarnings
 import MySQLdb
 import MySQLdb.cursors
 
-from src.Conf import Conf
+from Conf import Conf
 from Common import Logger
 
 filterwarnings('ignore', category = MySQLdb.Warning)

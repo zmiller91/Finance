@@ -3,7 +3,7 @@ __author__ = 'zmiller'
 import datetime
 
 from Dimensions import Company, RealTime
-from src.Dimensions import Stock
+from Dimensions import Stock
 from Common import Logger
 import Connection
 
