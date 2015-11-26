@@ -8,6 +8,7 @@ from Conf import Conf
 from DB import TradingData, Connection
 from pytz import timezone
 import datetime
+import time
 
 class Runable:
 
@@ -145,3 +146,4 @@ class Runable:
                 bStopTrading = False
                 bStartTrading = True
 
+            time.sleep(60)
