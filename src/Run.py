@@ -6,6 +6,7 @@ import time
 from pytz import timezone
 
 import AppVars
+from PortfolioCollection import PortfolioCollection
 from Dimensions import Company
 from Api import Api, ApiParameters
 from Common import Logger, Utils
@@ -95,22 +96,25 @@ class Runable:
             bIsOpen = bIsWeekDay and bIsMarketHours
 
             # it's 5AM EST on a week day let's collect the previous days data and get everything set up
-            if bIsWeekDay and bStartTrading and oNow.hour == 5:
+            if (bIsWeekDay and bStartTrading and oNow.hour == 5) or Conf.DAEMON_IS_DEBUG:
 
                 # insert daily data from yesterday
-                self.insertDailyData()
+                if Conf.DAEMON_INSERT_DAILY:
+                    self.insertDailyData()
 
                 # market vars, must be deleted at EOD
                 aTickers = self.getQuandlTickers(AppVars.DATA_RT_TICKERS)
                 aTickerChunks = Utils.chunk(aTickers, AppVars.CHUNK_TICKERS)
                 del aTickers
 
+                oPortfolioCollection = PortfolioCollection()
+
                 # OK to stop trading
                 bStartTrading = False
                 bStopTrading = True
 
             # the market is open! start collecting data and trading
-            if bIsOpen and aTickerChunks:
+            if (bIsOpen and aTickerChunks) or Conf.DAEMON_IS_DEBUG:
 
                 Logger.logApp("Starting a trading cycle...")
 
@@ -123,12 +127,15 @@ class Runable:
                     for iDataIndex in range(len(aDataList), len(aDataList) + len(aChunkData)):
                         oDataMap[aChunkData[iDataIndex - len(aDataList)][Company.SYMBOL]] = iDataIndex
                     aDataList += aChunkData
-                    del aChunkData
 
-                del iCurChunk
-                del iDataIndex
+                    del aChunkData
+                    del iCurChunk
+                    del iDataIndex
 
                 # broadcast new data to all portfolios
+                for oPortfolio in oPortfolioCollection.getCollection():
+                    oAlgorithm = oPortfolio['algorithm']
+                    oAlgorithm.run(oDataMap)
 
                 # insert new data
                 if aDataList:
@@ -141,10 +148,16 @@ class Runable:
                 Logger.logApp("Finished a trading cycle")
 
             # it's after 4:30PM EST on a week day let's close the trading day and go to sleep
-            if bIsWeekDay and bStopTrading and oNow.hour >= 16 and oNow.minute > 30:
+            if (bIsWeekDay and bStopTrading and oNow.hour >= 16 and oNow.minute > 30) or Conf.DAEMON_IS_DEBUG:
+
+                # insert portfolio data
+                for oPortfolio in oPortfolioCollection.getCollection():
+                    oAlgorithm = oPortfolio['algorithm']
+                    oAlgorithm.insert()
 
                 # clean up market vars
                 del aTickerChunks
+                del oPortfolioCollection
 
                 # OK to start trading
                 bStopTrading = False

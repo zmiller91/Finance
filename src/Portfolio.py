@@ -22,27 +22,26 @@ class Portfolio:
         self.aTradeLog = []
 
     def buy(self):
-        return
+        """
+        Buy a stock
+        :return:
+        """
 
     def sell(self):
-        return
+        """
+        Sell a stock
+        :return:
+        """
 
-    def udatePositions(self, oNewVals):
+    def update(self, oNewVals):
         """
         Updates a portfolio's position
         :param oNewVals: an object of new real time values
         :return:
         """
 
-    def insertData(self):
+    def insert(self):
         """
-        inserts portfolio performance values
+        Insert portfolio information into the DB.
         :return:
         """
-
-    def feedData(self):
-        """
-        Method informs the algorithm new data has been received. This method executes the algorithm's run method.
-        :retur
-        """
-        print "Feeding Data!"
