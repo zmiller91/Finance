@@ -1,8 +1,8 @@
 __author__ = 'zmiller'
 
 # These imports are essential for accessing critical components of this application
-from src.Portfolio import Portfolio
-from src.Dimensions import RealTime, Company
+from Portfolio import Portfolio
+from Dimensions import RealTime, Company
 
 class Algorithm(Portfolio):
 

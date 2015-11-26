@@ -4,7 +4,7 @@ import urllib
 import urllib2
 
 import ApiParameters
-from src.Common import Logger, Error
+from Common import Logger, Error
 
 
 def get(strRequest):
