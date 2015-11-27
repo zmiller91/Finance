@@ -80,8 +80,7 @@ class Runable:
         """
 
         # service variables
-        bStartTrading = True
-        bStopTrading = False
+        bTrading = False
 
         while True:
 
@@ -95,8 +94,8 @@ class Runable:
                              and datetime.time(oNow.hour, oNow.minute) < datetime.time(Conf.MARKET_CLOSE_HOUR, Conf.MARKET_CLOSE_MINUTE)
             bIsOpen = bIsWeekDay and bIsMarketHours
 
-            # it's 5AM EST on a week day let's collect the previous days data and get everything set up
-            if (bIsWeekDay and bStartTrading and oNow.hour == 5) or Conf.DAEMON_IS_DEBUG:
+            # it's after 5:00AM EST on a week day, let's collect the previous days data and get everything set up
+            if (bIsWeekDay and not bTrading and oNow.hour >= 5) or Conf.DAEMON_IS_DEBUG:
 
                 # insert daily data from yesterday
                 if Conf.DAEMON_INSERT_DAILY:
@@ -110,11 +109,10 @@ class Runable:
                 oPortfolioCollection = PortfolioCollection()
 
                 # OK to stop trading
-                bStartTrading = False
-                bStopTrading = True
+                bTrading = True
 
             # the market is open! start collecting data and trading
-            if (bIsOpen and aTickerChunks) or Conf.DAEMON_IS_DEBUG:
+            if (bTrading and bIsOpen and aTickerChunks) or Conf.DAEMON_IS_DEBUG:
 
                 Logger.logApp("Starting a trading cycle...")
 
@@ -148,7 +146,7 @@ class Runable:
                 Logger.logApp("Finished a trading cycle")
 
             # it's after 4:30PM EST on a week day let's close the trading day and go to sleep
-            if (bIsWeekDay and bStopTrading and oNow.hour >= 16 and oNow.minute > 30) or Conf.DAEMON_IS_DEBUG:
+            if (bIsWeekDay and bTrading and oNow.hour >= 16 and oNow.minute > 30) or Conf.DAEMON_IS_DEBUG:
 
                 # insert portfolio data
                 for oPortfolio in oPortfolioCollection.iteritems():
@@ -160,7 +158,6 @@ class Runable:
                 del oPortfolioCollection
 
                 # OK to start trading
-                bStopTrading = False
-                bStartTrading = True
+                bTrading = False
 
             time.sleep(Conf.DAEMON_SLEEP)

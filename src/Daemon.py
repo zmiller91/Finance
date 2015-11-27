@@ -7,7 +7,7 @@ import os
 import time
 import atexit
 from signal import SIGTERM
-
+from Conf import Conf
 
 class Daemon:
     """
@@ -15,7 +15,7 @@ class Daemon:
 
     Usage: subclass the Daemon class and override the run() method
     """
-    def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
+    def __init__(self, pidfile, stdin=Conf.LOG_STDIN, stdout=Conf.LOG_STDOUT, stderr=Conf.LOG_STDERR):
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
