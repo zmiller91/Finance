@@ -55,7 +55,7 @@ class Portfolio:
         """
 
         # shares must be an int, long, or float
-        if iShares < 0 and not isinstance(iShares, (int, long, float)):
+        if not isinstance(iShares, (int, long, float)) or iShares < 0:
             return False
 
         iShares = int(iShares)
@@ -111,11 +111,11 @@ class Portfolio:
         """
 
         # shares must be an int, long, or float
-        if iShares < 0 and not isinstance(iShares, (int, long, float)):
+        if not isinstance(iShares, (int, long, float)) or iShares < 0:
             return False
 
         # ticker must be in new data object and it must have a RT_ASK value
-        if not strTicker in self.oNewValues or not RealTime.RT_ASK in self.oNewValues[strTicker]:
+        if strTicker not in self.oNewValues or RealTime.RT_ASK not in self.oNewValues[strTicker]:
             return False
 
         # position must be open
@@ -161,12 +161,19 @@ class Portfolio:
         :return: None
         """
 
-        self.oNewValues = oNewVals
+        # validate data coming in. i hate to do it in this method, since it gets run for every algorithm
+        # right before every trade, but...this data can be manipulated by the user, so we should probably
+        # validate it
+        for strTicker, oData in oNewVals.iteritems():
+            if RealTime.RT_BID not in oData:
+                continue
+            self.oNewValues[strTicker] = oData
+
         self.fLiveValue = 0
         for strTicker, oPosition in self.oOpenPositions.iteritems():
 
             # ticker must be in new data object and it must have a RT_ASK value
-            if not strTicker in self.oNewValues or not RealTime.RT_BID in self.oNewValues[strTicker]:
+            if not strTicker in self.oNewValues:
                 continue
 
             oPosition["market_value"] = oPosition["quantity"] * self.oNewValues[strTicker][RealTime.RT_BID]
