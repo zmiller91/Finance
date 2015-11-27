@@ -133,7 +133,7 @@ class Runable:
                     del iDataIndex
 
                 # broadcast new data to all portfolios
-                for oPortfolio in oPortfolioCollection.getCollection():
+                for oPortfolio in oPortfolioCollection.iteritems():
                     oAlgorithm = oPortfolio['algorithm']
                     oAlgorithm.run(oDataMap)
 
@@ -151,7 +151,7 @@ class Runable:
             if (bIsWeekDay and bStopTrading and oNow.hour >= 16 and oNow.minute > 30) or Conf.DAEMON_IS_DEBUG:
 
                 # insert portfolio data
-                for oPortfolio in oPortfolioCollection.getCollection():
+                for oPortfolio in oPortfolioCollection.iteritems():
                     oAlgorithm = oPortfolio['algorithm']
                     oAlgorithm.insert()
 

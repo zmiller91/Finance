@@ -7,7 +7,7 @@ Run.run()
 
 
 oPortfolioCollection = PortfolioCollection()
-aPortfolios = oPortfolioCollection.getCollection()
+aPortfolios = oPortfolioCollection.iteritems()
 for oPortfolio in aPortfolios:
     oAlgorithm = oPortfolio['algorithm']
     oAlgorithm.feedData()

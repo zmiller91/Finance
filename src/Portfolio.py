@@ -13,16 +13,17 @@ class Portfolio:
         """
 
         #instantiate class variables
-        self.fPortfolioValue = 0.0
-        self.fCashValue = 0.0
-        self.fTradeComission= 0.0
-        self.oOpenPositions = {}
 
         self.oDB = Connection.getDB()
         self.oAlgoConf = aAlgoConf
         self.aDataDims = aDataDims
-        self.aTradeLog = []
 
+        self.fLiveValue = 0
+        self.fCashValue = self.oAlgoConf["start_bal"]
+        self.fTradeComission= self.oAlgoConf["comission"]
+
+        self.oOpenPositions = {}
+        self.aTradeLog = []
         self.oNewValues = {}
 
     def log(self, strTicker, strType, iShares, fTradeValue, fTradeCost):
@@ -82,11 +83,12 @@ class Portfolio:
                     "quantity": 0,
                     "market_value": 0.0,
                     "cost_basis": 0.0,
-                    "last_modified": str(datetime.datetime.now())
+                    "last_modified": str(datetime.now())
                 }
 
             # spend down cash
             self.fCashValue -= fTradeCost
+            self.fLiveValue += fTradeValue
 
             # update open position
             self.oOpenPositions[strTicker]["quantity"] += iShares
@@ -132,11 +134,15 @@ class Portfolio:
             # add to cash
             self.fCashValue += fTradeValue - self.fTradeComission
 
+            # use RT_BID because update() uses RT_BID and we essentially want to negate
+            # the effect of the update on these shares
+            self.fLiveValue -= iShares * self.oNewValues[strTicker][RealTime.RT_BID]
+
             # update open positions
             self.oOpenPositions[strTicker]["quantity"] -= iShares
             self.oOpenPositions[strTicker]["market_value"] -= fTradeValue
             self.oOpenPositions[strTicker]["cost_basis"] -= fCostBasisReduction
-            self.oOpenPositions[strTicker]["last_modified"] = str(datetime.datetime.now())
+            self.oOpenPositions[strTicker]["last_modified"] = str(datetime.now())
 
             # close trade if needed
             if self.oOpenPositions[strTicker]["quantity"] == 0:
@@ -156,14 +162,17 @@ class Portfolio:
         """
 
         self.oNewValues = oNewVals
-        for strTicker, oPosition in self.oOpenPositions:
+        self.fLiveValue = 0
+        for strTicker, oPosition in self.oOpenPositions.iteritems():
 
             # ticker must be in new data object and it must have a RT_ASK value
-            if not strTicker in self.oNewValues or not RealTime.RT_ASK in self.oNewValues[strTicker]:
+            if not strTicker in self.oNewValues or not RealTime.RT_BID in self.oNewValues[strTicker]:
                 continue
 
-            oPosition["market_value"] = oPosition["quantity"] * self.oNewValues[strTicker][RealTime.RT_ASK]
-            oPosition["last_modified"] = str(datetime.datetime.now())
+            oPosition["market_value"] = oPosition["quantity"] * self.oNewValues[strTicker][RealTime.RT_BID]
+            oPosition["last_modified"] = str(datetime.now())
+
+            self.fLiveValue += oPosition["market_value"]
 
 
     def insert(self):

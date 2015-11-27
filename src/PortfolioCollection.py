@@ -38,7 +38,7 @@ class PortfolioCollection:
                     except Exception as e:
                         Logger.logError("Failed to instantiate {0}: {1}".format(str(file), str(e)))
 
-    def getCollection(self):
+    def iteritems(self):
         """
         Returns an array of objects that contain an algorithm and the algorithms properties
         :return: array of objects
